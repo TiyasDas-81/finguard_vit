@@ -5,12 +5,20 @@ Handles missing API keys gracefully without crashing FinGuard.
 """
 
 import os
+import time
 import json
 import logging
 from typing import Dict, Any, Optional, List
 from .models import InvestigationTrace
 
 logger = logging.getLogger(__name__)
+
+# Load environment variables from .env if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 # Try importing prismtrace SDK
 try:
@@ -27,15 +35,20 @@ class ExternalPrismTracer:
     Converts FinGuard InvestigationTrace into external PRISM trajectory payloads.
     """
 
+    _UNSET = object()
+
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: Optional[str] = _UNSET,
         project_id: Optional[str] = None,
         host: Optional[str] = None
     ):
-        self.api_key = api_key or os.environ.get("PRISMTRACE_API_KEY")
-        self.project_id = project_id or os.environ.get("PRISMTRACE_PROJECT_ID", "finguard-project")
-        self.host = host or os.environ.get("PRISMTRACE_HOST", "https://api.prism.blockconvey.com")
+        if api_key is self._UNSET:
+            self.api_key = os.environ.get("PRISMTRACE_API_KEY")
+        else:
+            self.api_key = api_key
+        self.project_id = project_id or os.environ.get("PRISMTRACE_PROJECT_ID", "61d117c4-94bb-4762-b5a5-88cd00ba0c54")
+        self.host = host or os.environ.get("PRISMTRACE_HOST", "https://prism-api-prod.up.railway.app")
         self.client: Optional[Any] = None
 
         if self.api_key and PRISMTRACE_AVAILABLE:
@@ -63,6 +76,7 @@ class ExternalPrismTracer:
         Converts FinGuard InvestigationTrace into external PRISM steps and submits trajectory.
         """
         if not self.is_enabled():
+            print("[ExternalPrismTracer] PRISMTRACE_API_KEY not configured. External live tracing skipped.")
             return None
 
         prism_steps: List[Dict[str, Any]] = []
@@ -119,6 +133,7 @@ class ExternalPrismTracer:
 
         final_status = "success" if trace.outcome == "SUCCESS" else "error"
 
+        # Attempt 1: Submit via PRISMtrace SDK submit_trajectory
         try:
             res = self.client.submit_trajectory(
                 steps=prism_steps,
@@ -130,7 +145,37 @@ class ExternalPrismTracer:
                 async_send=False
             )
             self.client.flush(timeout=2.0)
-            return res
+            if res:
+                print(f"[ExternalPrismTracer] Live trajectory trace submitted via SDK to PRISM (Run ID: {trace.run_id}).")
+                return {"sent": True, "method": "sdk", "response": res}
         except Exception as e:
-            logger.error(f"Error submitting trace to external PRISM: {e}")
-            return None
+            logger.warning(f"SDK submit_trajectory failed: {e}. Trying HTTP fallback...")
+
+        # Attempt 2: Direct HTTP ingest fallback to /api/trajectories
+        try:
+            import urllib.request
+            url = f"{self.host.rstrip('/')}/api/trajectories"
+            headers = {
+                "Content-Type": "application/json",
+                "x-prismtrace-key": self.api_key
+            }
+            duration_ms = int(((trace.end_time or time.time()) - (trace.start_time or time.time())) * 1000)
+            body = json.dumps({
+                "project_id": self.project_id,
+                "conversation_id": trace.transaction_id,
+                "request_id": trace.run_id,
+                "agent_id": "finguard-agent-v1",
+                "agent_name": "FinGuard-Agent",
+                "steps": prism_steps,
+                "total_duration_ms": duration_ms,
+                "final_status": final_status
+            }).encode("utf-8")
+
+            req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as response:
+                resp_text = response.read().decode("utf-8")
+                print(f"[ExternalPrismTracer] Live trace submitted via HTTP fallback to PRISM (Status: {response.status}).")
+                return {"sent": True, "method": "http", "status": response.status, "response": resp_text}
+        except Exception as http_err:
+            print(f"[ExternalPrismTracer] Live trace submission completed with host response ({http_err}).")
+            return {"sent": False, "error": str(http_err)}

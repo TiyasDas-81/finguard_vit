@@ -27,10 +27,9 @@ class ToolAdapter:
         if self.use_mock:
             return self._execute_mock_tool(tool_name, arguments, start_time)
         
-        # If Aryan's real tools become available in the future:
+        # Real DB-backed tool execution using Aryan's tools
         try:
-            # Fallback to mock if real tool execution is not wired
-            return self._execute_mock_tool(tool_name, arguments, start_time)
+            return self._execute_real_tool(tool_name, arguments, start_time)
         except Exception as e:
             execution_time = time.time() - start_time
             return ToolResult(
@@ -42,6 +41,63 @@ class ToolAdapter:
                 execution_time=execution_time,
                 error=str(e)
             )
+
+    def _execute_real_tool(self, tool_name: str, arguments: Dict[str, Any], start_time: float) -> ToolResult:
+        from backend.app.tools import (
+            get_transaction_history,
+            get_spending_analytics,
+            get_merchant_analysis,
+            get_related_activity,
+            get_risk_context,
+            get_generic_balance
+        )
+
+        customer_id = arguments.get("customer_id", "CUST458")
+        transaction_id = arguments.get("transaction_id", "TXN10291")
+        amount = float(arguments.get("amount", 78000))
+        merchant = arguments.get("merchant", "XYZ Electronics")
+        timestamp = arguments.get("timestamp", "02:17 AM")
+
+        raw_res = None
+        if tool_name == "transaction_history":
+            raw_res = get_transaction_history(customer_id)
+        elif tool_name == "spending_analytics":
+            raw_res = get_spending_analytics(customer_id, amount)
+        elif tool_name == "merchant_analysis":
+            raw_res = get_merchant_analysis(merchant, customer_id)
+        elif tool_name == "related_activity":
+            raw_res = get_related_activity(customer_id, timestamp)
+        elif tool_name == "risk_context":
+            raw_res = get_risk_context(transaction_id)
+        elif tool_name == "generic_balance":
+            raw_res = get_generic_balance(customer_id)
+        else:
+            execution_time = time.time() - start_time
+            return ToolResult(
+                tool_name=tool_name,
+                success=False,
+                status_code=404,
+                input=arguments,
+                output={},
+                execution_time=execution_time,
+                error=f"Unknown tool name: {tool_name}"
+            )
+
+        execution_time = time.time() - start_time
+        success = raw_res.get("success", False)
+        status_code = 200 if success else 500
+        output_data = raw_res.get("data", {})
+        error_msg = raw_res.get("error")
+
+        return ToolResult(
+            tool_name=tool_name,
+            success=success,
+            status_code=status_code,
+            input=arguments,
+            output=output_data,
+            execution_time=execution_time,
+            error=error_msg
+        )
 
     def _execute_mock_tool(self, tool_name: str, arguments: Dict[str, Any], start_time: float) -> ToolResult:
         transaction_id = arguments.get("transaction_id", "TXN10291")

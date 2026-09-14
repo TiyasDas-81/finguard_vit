@@ -12,6 +12,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from backend.app.agents.finguard_agent import FinGuardAgent
+from backend.app.agents.tool_adapter import ToolAdapter
 from backend.app.prism.evaluator import PrismEvaluator
 from backend.app.prism.failure_detector import FailureDetector
 from backend.app.prism.diagnostician import PrismDiagnostician
@@ -33,7 +34,8 @@ def run_demo():
         "risk_score": 87
     }
 
-    agent = FinGuardAgent(llm_mode="mock")
+    tool_adapter = ToolAdapter(use_mock=False)
+    agent = FinGuardAgent(tool_adapter=tool_adapter, llm_mode="mock")
     evaluator = PrismEvaluator()
     detector = FailureDetector()
     diagnostician = PrismDiagnostician()
