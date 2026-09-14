@@ -40,17 +40,19 @@ class TestBackendIntegration(unittest.TestCase):
     def test_database_models_and_seed(self):
         cust = self.db.query(Customer).filter(Customer.customer_id == "CUST458").first()
         self.assertIsNotNone(cust)
-        self.assertEqual(cust.name, "Aarav Sharma")
+        self.assertEqual(cust.name, "Rahul Sharma")
+        self.assertEqual(cust.avg_txn_amount, 4300.0)
 
         txn = self.db.query(Transaction).filter(Transaction.transaction_id == "TXN10291").first()
         self.assertIsNotNone(txn)
         self.assertEqual(txn.amount, 78000.0)
-        self.assertEqual(txn.merchant, "XYZ Electronics")
+        self.assertEqual(txn.merchant.name, "XYZ Electronics")
+        self.assertEqual(txn.status, "SUSPICIOUS")
 
         re = self.db.query(RiskEvent).filter(RiskEvent.transaction_id == "TXN10291").first()
         self.assertIsNotNone(re)
-        self.assertEqual(re.risk_score, 87)
-        self.assertEqual(re.risk_level, "HIGH")
+        self.assertEqual(re.event_type, "HIGH_AMOUNT")
+        self.assertEqual(re.severity, "CRITICAL")
 
     def test_five_financial_tools(self):
         # 1. transaction_history
@@ -109,7 +111,7 @@ class TestBackendIntegration(unittest.TestCase):
         # /api/customers/CUST458
         resp = self.client.get("/api/customers/CUST458")
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.json()["name"], "Aarav Sharma")
+        self.assertEqual(resp.json()["name"], "Rahul Sharma")
 
         # /api/transactions/TXN10291
         resp = self.client.get("/api/transactions/TXN10291")
