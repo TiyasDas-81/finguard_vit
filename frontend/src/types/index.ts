@@ -1,6 +1,25 @@
 export type RiskLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type AlertStatus = 'SUSPICIOUS' | 'UNDER_REVIEW' | 'AUTO_CLEARED' | 'HIGH';
 
-export interface AlertItem {
+export interface Transaction {
+  id: string;
+  transactionId: string;
+  customerId: string;
+  customerName: string;
+  amount: string;
+  amountRaw: number;
+  historicalAvg: string;
+  merchant: string;
+  category: string;
+  time: string;
+  timestamp: string;
+  normalWindow: string;
+  device: string;
+  ipAddress: string;
+  location: string;
+}
+
+export interface Alert {
   transactionId: string;
   customerId: string;
   amount: string;
@@ -8,8 +27,8 @@ export interface AlertItem {
   merchant: string;
   timestamp: string;
   time: string;
-  riskScore: number; // e.g. 87
-  status: RiskLevel;
+  riskScore: number;
+  status: RiskLevel | AlertStatus;
   actionRequired: string;
 }
 
@@ -18,6 +37,8 @@ export interface WorkflowStep {
   label: string;
   status: 'completed' | 'in_progress' | 'pending';
   timestamp: string;
+  durationMs?: number;
+  description: string;
 }
 
 export interface ToolCall {
@@ -25,9 +46,17 @@ export interface ToolCall {
   name: string;
   status: 'SUCCESS' | 'FAILED' | 'HTTP_200_GOAL_FAILED';
   statusCode: number;
-  latencyMs: number;
+  executionTimeMs: number;
   input: Record<string, any>;
-  output: Record<string, any>;
+  outputSummary: Record<string, any>;
+}
+
+export interface Evidence {
+  id: string;
+  title: string;
+  value: string;
+  description: string;
+  impactScore: number;
 }
 
 export interface EvidenceChainNode {
@@ -38,7 +67,18 @@ export interface EvidenceChainNode {
   severity: 'normal' | 'warning' | 'critical';
 }
 
-export interface InvestigationData {
+export interface InvestigationReport {
+  dossierId: string;
+  transactionId: string;
+  riskLevel: RiskLevel;
+  status: string;
+  evidenceSummary: string[];
+  aiReasoning: string[];
+  recommendation: string;
+  generatedAt: string;
+}
+
+export interface Investigation {
   id: string;
   transactionId: string;
   customer: {
@@ -48,40 +88,51 @@ export interface InvestigationData {
     avgTxnAmount: string;
     location: string;
   };
-  transaction: {
-    amount: string;
-    merchant: string;
-    category: string;
-    time: string;
-    device: string;
-    ipAddress: string;
-  };
+  transaction: Transaction;
   riskScore: number;
   riskLevel: RiskLevel;
   workflow: WorkflowStep[];
-  timeline: {
-    id: string;
-    time: string;
-    phase: string;
-    title: string;
-    description: string;
-    toolCall?: ToolCall;
-  }[];
-  evidenceList: {
-    id: string;
-    title: string;
-    value: string;
-    description: string;
-    impactScore: number;
-  }[];
+  timeline: AgentTrace[];
+  toolCalls: ToolCall[];
+  evidenceList: Evidence[];
   evidenceChain: EvidenceChainNode[];
   aiReasoning: string[];
   recommendation: string;
   humanReviewRequired: boolean;
   dossierStatus: string;
+  report: InvestigationReport;
 }
 
-export interface PrismMetrics {
+export interface AgentTrace {
+  id: string;
+  stepNumber: number;
+  event: string;
+  service: string;
+  timestamp: string;
+  durationMs: number;
+  status: 'SUCCESS' | 'WARNING' | 'FAILED' | 'PRISM_CORRECTED';
+  details: string;
+  toolCall?: ToolCall;
+}
+
+export interface PrismFailureState {
+  id: string;
+  timestamp: string;
+  investigationId: string;
+  expectedTool: string;
+  actualTool: string;
+  toolStatus: string;
+  goalStatus: string;
+  failureType: string;
+  impact: string;
+  prismDiagnosis: string;
+  rootCause: string;
+  recommendation: string;
+  autoCorrection: string;
+  reRunStatus: string;
+}
+
+export interface PrismEvaluation {
   totalAgentRuns: number;
   successfulRuns: number;
   failedRuns: number;
@@ -90,28 +141,25 @@ export interface PrismMetrics {
   evidenceGrounding: number;
   goalCompletion: number;
   recoveryRate: number;
-  recentFailures: {
-    id: string;
-    timestamp: string;
-    investigationId: string;
-    expectedTool: string;
-    actualTool: string;
-    toolStatus: string;
-    goalStatus: string;
-    prismDiagnosis: string;
-    autoCorrection: string;
-    reRunStatus: string;
-  }[];
+  recentFailures: PrismFailureState[];
 }
 
-export interface TraceStep {
-  id: string;
-  stepNumber: number;
-  title: string;
-  service: string;
-  timestamp: string;
-  durationMs: number;
-  status: 'SUCCESS' | 'WARNING' | 'FAILED' | 'PRISM_CORRECTED';
-  details: string;
-  payload?: any;
+export interface HumanReview {
+  investigationId: string;
+  decision: 'ESCALATE' | 'MARK_SUSPICIOUS' | 'DISMISS';
+  notes: string;
+  reviewedBy?: string;
+  timestamp?: string;
+}
+
+export interface HistoryRun {
+  runId: string;
+  transactionId: string;
+  amount: string;
+  risk: RiskLevel;
+  duration: string;
+  toolsUsed: string[];
+  prismResult: 'PASSED' | 'RECOVERED' | 'FAILED';
+  status: 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED';
+  trace: AgentTrace[];
 }

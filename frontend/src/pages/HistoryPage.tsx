@@ -1,100 +1,140 @@
 import React, { useEffect, useState } from 'react';
-import { TraceStep } from '../types';
+import { HistoryRun } from '../types';
 import { apiService } from '../services/api';
-import { History, Clock, CheckCircle2, AlertTriangle, Cpu, Terminal, ArrowDown } from 'lucide-react';
+import { RiskBadge } from '../components/common/RiskBadge';
+import { StatusBadge } from '../components/common/StatusBadge';
+import { History, ChevronDown, ChevronUp, Terminal, Clock, CheckCircle2 } from 'lucide-react';
 
 export const HistoryPage: React.FC = () => {
-  const [traces, setTraces] = useState<TraceStep[]>([]);
+  const [runs, setRuns] = useState<HistoryRun[]>([]);
+  const [expandedRunId, setExpandedRunId] = useState<string | null>('RUN-9921');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadTrace() {
-      const data = await apiService.getTraceTimeline('TXN10291');
-      setTraces(data);
+    async function loadHistory() {
+      const data = await apiService.getHistoryRuns();
+      setRuns(data);
       setLoading(false);
     }
-    loadTrace();
+    loadHistory();
   }, []);
+
+  const toggleRun = (runId: string) => {
+    setExpandedRunId(expandedRunId === runId ? null : runId);
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-slate-400 font-mono text-sm">
-        <Clock className="w-5 h-5 animate-spin text-cyan-400 mr-2" /> Loading Cryptographic Trace Audit Logs...
+        <Clock className="w-5 h-5 animate-spin text-cyan-400 mr-2" /> Querying Audit Trace History...
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header */}
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <History className="w-5 h-5 text-cyan-400" />
-            Audit Trace & Agent Execution Timeline
+            Previous Agent Investigation Runs
           </h2>
           <p className="text-xs text-slate-400">
-            End-to-end execution trace for investigation <strong className="text-slate-200">INV-10291 (TXN10291)</strong>.
+            Historical execution trace records, PRISM evaluations, and tool telemetry.
           </p>
         </div>
-
-        <span className="font-mono text-xs text-slate-400 bg-[#0F1629] px-3 py-1.5 rounded-lg border border-[#1E2945]">
-          Total Execution Latency: <strong className="text-cyan-400">7.86s</strong>
-        </span>
       </div>
 
-      {/* Trace Timeline List */}
-      <div className="fg-card p-8 relative space-y-8">
-        {traces.map((step, index) => (
-          <div key={step.id} className="relative pl-12 flex flex-col md:flex-row md:items-start justify-between gap-4 group">
-            {/* Connecting Vertical Line */}
-            {index < traces.length - 1 && (
-              <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-[#1E2945] group-hover:bg-cyan-500/40 transition-colors"></div>
-            )}
+      <div className="fg-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-300">
+            <thead className="bg-[#0A0F1D] text-slate-400 font-mono text-[11px] uppercase border-b border-[#1E2945]">
+              <tr>
+                <th className="p-4">Run ID</th>
+                <th className="p-4">Transaction</th>
+                <th className="p-4">Amount</th>
+                <th className="p-4">Risk Rating</th>
+                <th className="p-4">Duration</th>
+                <th className="p-4">Tools Used</th>
+                <th className="p-4">PRISM Result</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-right">Trace Details</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#1E2945]/60">
+              {runs.map((run) => (
+                <React.Fragment key={run.runId}>
+                  <tr
+                    onClick={() => toggleRun(run.runId)}
+                    className="hover:bg-[#121B33] cursor-pointer transition-colors"
+                  >
+                    <td className="p-4 font-mono font-bold text-cyan-400">{run.runId}</td>
+                    <td className="p-4 font-mono font-bold text-white">{run.transactionId}</td>
+                    <td className="p-4 font-mono text-cyan-300">{run.amount}</td>
+                    <td className="p-4">
+                      <RiskBadge risk={run.risk} />
+                    </td>
+                    <td className="p-4 font-mono text-slate-400">{run.duration}</td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap gap-1">
+                        {run.toolsUsed.map((tool, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded bg-[#070A12] border border-[#1E2945] text-[10px] font-mono text-slate-300"
+                          >
+                            {tool}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <StatusBadge status={run.prismResult} />
+                    </td>
+                    <td className="p-4">
+                      <StatusBadge status={run.status} />
+                    </td>
+                    <td className="p-4 text-right text-slate-400">
+                      {expandedRunId === run.runId ? (
+                        <ChevronUp className="w-4 h-4 inline text-cyan-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 inline" />
+                      )}
+                    </td>
+                  </tr>
 
-            {/* Step Number Circle */}
-            <div
-              className={`absolute left-0 top-0 w-10 h-10 rounded-xl border flex items-center justify-center font-mono font-bold text-sm shadow-md transition-all ${
-                step.status === 'PRISM_CORRECTED'
-                  ? 'bg-purple-950/40 border-purple-500 text-purple-300'
-                  : 'bg-[#0F1629] border-cyan-500/40 text-cyan-400'
-              }`}
-            >
-              0{step.stepNumber}
-            </div>
+                  {/* Expanded Trace Timeline */}
+                  {expandedRunId === run.runId && (
+                    <tr>
+                      <td colSpan={9} className="p-6 bg-[#070A12] border-b border-[#1E2945]">
+                        <div className="space-y-4">
+                          <h4 className="font-bold text-xs text-white font-mono uppercase tracking-wider flex items-center gap-2">
+                            <Terminal className="w-4 h-4 text-cyan-400" />
+                            Execution Trace Timeline for {run.runId} ({run.transactionId})
+                          </h4>
 
-            {/* Content */}
-            <div className="space-y-1 flex-1">
-              <div className="flex items-center gap-3">
-                <h3 className="font-bold text-base text-white">{step.title}</h3>
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                    step.status === 'PRISM_CORRECTED'
-                      ? 'badge-prism'
-                      : 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                  }`}
-                >
-                  {step.status}
-                </span>
-              </div>
-
-              <div className="text-xs text-slate-400 font-mono">
-                Service: <span className="text-slate-200">{step.service}</span> &bull; Timestamp: {step.timestamp}
-              </div>
-
-              <p className="text-xs text-slate-300 bg-[#070A12] p-3 rounded-lg border border-[#1E2945] mt-2 font-mono">
-                {step.details}
-              </p>
-            </div>
-
-            {/* Duration Badge */}
-            <div className="text-right font-mono text-xs text-slate-400 whitespace-nowrap">
-              <span className="px-2.5 py-1 rounded bg-[#0A0F1D] border border-[#1E2945]">
-                {step.durationMs}ms
-              </span>
-            </div>
-          </div>
-        ))}
+                          <div className="space-y-3 relative pl-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#1E2945]">
+                            {run.trace.map((step) => (
+                              <div key={step.id} className="relative space-y-1 text-xs">
+                                <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-cyan-400"></div>
+                                <div className="flex items-center justify-between text-slate-300">
+                                  <span className="font-bold text-white">{step.event}</span>
+                                  <span className="font-mono text-slate-500 text-[10px]">{step.timestamp} ({step.durationMs}ms)</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 font-mono bg-[#0A0F1D] p-2 rounded border border-[#18233D]">
+                                  {step.details}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

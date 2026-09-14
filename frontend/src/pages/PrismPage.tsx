@@ -1,20 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { PrismMetrics } from '../types';
+import { PrismEvaluation, PrismFailureState } from '../types';
 import { apiService } from '../services/api';
-import { Cpu, CheckCircle2, AlertOctagon, RefreshCw, ShieldCheck, Zap, ArrowRight, AlertTriangle, Layers } from 'lucide-react';
+import { PrismMetricCard } from '../components/prism/PrismMetricCard';
+import { FailurePanel } from '../components/prism/FailurePanel';
+import { RemediationFlow } from '../components/prism/RemediationFlow';
+import { Cpu, Play, CheckCircle2, AlertOctagon, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
 
 export const PrismPage: React.FC = () => {
-  const [prism, setPrism] = useState<PrismMetrics | null>(null);
+  const [prism, setPrism] = useState<PrismEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Interactive PRISM Simulation States: 'IDLE' | 'FAILED' | 'DIAGNOSED' | 'VALIDATED'
+  const [simState, setSimState] = useState<'IDLE' | 'FAILED' | 'DIAGNOSED' | 'VALIDATED'>('IDLE');
+  const [failureData, setFailureData] = useState<PrismFailureState | null>(null);
+  const [diagnoseInfo, setDiagnoseInfo] = useState<{ rootCause: string; recommendation: string } | null>(null);
+  const [rerunInfo, setRerunInfo] = useState<{ recoveryTimeMs: number } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     async function loadPrism() {
       const data = await apiService.getPrismEvaluations();
       setPrism(data);
+      setFailureData(data.recentFailures[0]);
       setLoading(false);
     }
     loadPrism();
   }, []);
+
+  const handleSimulateFailure = async () => {
+    setActionLoading(true);
+    const failState = await apiService.simulatePrismFailure();
+    setFailureData(failState);
+    setSimState('FAILED');
+    setDiagnoseInfo(null);
+    setRerunInfo(null);
+    setActionLoading(false);
+  };
+
+  const handleDiagnose = async () => {
+    setActionLoading(true);
+    const diag = await apiService.diagnosePrismFailure();
+    setDiagnoseInfo(diag);
+    setSimState('DIAGNOSED');
+    setActionLoading(false);
+  };
+
+  const handleRerun = async () => {
+    setActionLoading(true);
+    const res = await apiService.rerunInvestigation();
+    setRerunInfo({ recoveryTimeMs: res.recoveryTimeMs });
+    setSimState('VALIDATED');
+    setActionLoading(false);
+  };
 
   if (loading || !prism) {
     return (
@@ -24,8 +61,6 @@ export const PrismPage: React.FC = () => {
     );
   }
 
-  const failureCase = prism.recentFailures[0];
-
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header Banner */}
@@ -34,184 +69,119 @@ export const PrismPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="badge-prism px-2.5 py-0.5 rounded text-xs font-mono font-bold flex items-center gap-1">
-                <Cpu className="w-3.5 h-3.5" /> PRISM MONITORING ENGINE
+                <Cpu className="w-3.5 h-3.5" /> PRISM RELIABILITY SYSTEM
               </span>
-              <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-800">
+              <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-800 font-bold">
                 RECOVERY RATE: {prism.recoveryRate}%
               </span>
             </div>
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
-              PRISM Agent Reliability & Self-Correction Engine
+              PRISM Agent Reliability & Interactive Simulation
             </h2>
             <p className="text-xs text-purple-200/80 max-w-2xl mt-1">
-              Autonomous oversight layer detecting false tool success, schema hallucinations, and incomplete investigation goals.
+              Autonomous oversight layer evaluating tool accuracy, grounding, and self-correcting tool selection failures.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-[#070A12] p-3 rounded-xl border border-purple-500/30 font-mono text-xs">
-            <ShieldCheck className="w-5 h-5 text-purple-400" />
-            <div>
-              <div className="text-slate-400 text-[10px]">GROUNDING ACCURACY</div>
-              <div className="text-purple-300 font-bold text-base">{prism.evidenceGrounding}%</div>
-            </div>
+          {/* Interactive Action Bar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleSimulateFailure}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/20 transition-all flex items-center gap-1.5"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              [ SIMULATE AGENT FAILURE ]
+            </button>
+
+            {simState === 'FAILED' && (
+              <button
+                onClick={handleDiagnose}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5"
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                [ DIAGNOSE FAILURE ]
+              </button>
+            )}
+
+            {(simState === 'DIAGNOSED' || simState === 'FAILED') && (
+              <button
+                onClick={handleRerun}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                [ FIX & RE-RUN ]
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* PRISM Metrics Grid */}
+      {/* PRISM Metric Cards */}
       <div>
         <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-purple-400 mb-4">
           PRISM Reliability Metrics
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          <div className="fg-card p-4">
-            <span className="text-[10px] text-slate-400 block font-mono">Agent Runs</span>
-            <span className="text-2xl font-bold text-white font-mono">{prism.totalAgentRuns}</span>
-          </div>
-          <div className="fg-card p-4 border-l-2 border-l-emerald-500">
-            <span className="text-[10px] text-slate-400 block font-mono">Successful</span>
-            <span className="text-2xl font-bold text-emerald-400 font-mono">{prism.successfulRuns}</span>
-          </div>
-          <div className="fg-card p-4 border-l-2 border-l-red-500">
-            <span className="text-[10px] text-slate-400 block font-mono">Failed Runs</span>
-            <span className="text-2xl font-bold text-red-400 font-mono">{prism.failedRuns}</span>
-          </div>
-          <div className="fg-card p-4 border-l-2 border-l-purple-500">
-            <span className="text-[10px] text-slate-400 block font-mono">Recovered</span>
-            <span className="text-2xl font-bold text-purple-400 font-mono">{prism.recoveredRuns}</span>
-          </div>
-          <div className="fg-card p-4">
-            <span className="text-[10px] text-slate-400 block font-mono">Tool Selection</span>
-            <span className="text-2xl font-bold text-cyan-300 font-mono">{prism.toolSelectionAccuracy}%</span>
-          </div>
-          <div className="fg-card p-4">
-            <span className="text-[10px] text-slate-400 block font-mono">Grounding</span>
-            <span className="text-2xl font-bold text-purple-300 font-mono">{prism.evidenceGrounding}%</span>
-          </div>
-          <div className="fg-card p-4">
-            <span className="text-[10px] text-slate-400 block font-mono">Goal Complete</span>
-            <span className="text-2xl font-bold text-emerald-300 font-mono">{prism.goalCompletion}%</span>
-          </div>
+          <PrismMetricCard title="Agent Runs" value={prism.totalAgentRuns} />
+          <PrismMetricCard title="Successful Runs" value={prism.successfulRuns} colorClass="text-emerald-400" />
+          <PrismMetricCard title="Failed Runs" value={prism.failedRuns} colorClass="text-red-400" />
+          <PrismMetricCard title="Recovered Runs" value={prism.recoveredRuns} colorClass="text-purple-400" />
+          <PrismMetricCard title="Tool Selection" value={`${prism.toolSelectionAccuracy}%`} colorClass="text-cyan-300" />
+          <PrismMetricCard title="Grounding" value={`${prism.evidenceGrounding}%`} colorClass="text-purple-300" />
+          <PrismMetricCard title="Goal Complete" value={`${prism.goalCompletion}%`} colorClass="text-emerald-300" />
         </div>
       </div>
 
-      {/* ==================================================== */}
-      {/* 9. PRISM FAILURE VIEW (HIGHLIGHT FEATURE) */}
-      {/* ==================================================== */}
-      <div className="fg-card-glow p-8 rounded-2xl border-purple-500/50 shadow-2xl space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-purple-500/30">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center">
-              <AlertOctagon className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">
-                PRISM Visual Failure State Diagnostic
+      {/* Dynamic Interactive Demonstration Area */}
+      {simState === 'IDLE' ? (
+        <div className="fg-card p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center mx-auto text-purple-400 font-bold">
+            <Cpu className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-white">Interactive PRISM Agent Failure Demonstration</h3>
+          <p className="text-xs text-slate-400 max-w-lg mx-auto">
+            Click <strong className="text-red-400">[ SIMULATE AGENT FAILURE ]</strong> above to simulate a false HTTP 200 tool response and witness PRISM's autonomous diagnosis and self-correction flow.
+          </p>
+          <button
+            onClick={handleSimulateFailure}
+            className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/20 transition-all inline-flex items-center gap-2"
+          >
+            <Play className="w-4 h-4 fill-current" /> Launch Failure Demonstration
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Active Failure Panel */}
+          {failureData && <FailurePanel failureState={failureData} />}
+
+          {/* Remediation & Validation Flow */}
+          <RemediationFlow
+            currentStage={simState === 'VALIDATED' ? 'VALIDATED' : simState === 'DIAGNOSED' ? 'DIAGNOSED' : 'DETECTED'}
+            rootCause={diagnoseInfo?.rootCause || failureData?.rootCause}
+            recommendation={diagnoseInfo?.recommendation || failureData?.recommendation}
+          />
+
+          {/* Final Validation Banner if Re-run Completed */}
+          {simState === 'VALIDATED' && (
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-[#0A1F18] to-emerald-950/60 border-2 border-emerald-500/60 shadow-xl space-y-2 text-center animate-fade-in">
+              <div className="flex items-center justify-center gap-2 text-emerald-400 font-mono text-xs font-extrabold uppercase">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                PRISM AGENT SELF-HEALING COMPLETE
+              </div>
+              <h3 className="text-2xl font-extrabold text-white">
+                VALIDATED ✓ — Investigation Goal: PASSED ✓
               </h3>
-              <p className="text-xs text-slate-400 font-mono">
-                Case ID: {failureCase.investigationId} &bull; Timestamp: {failureCase.timestamp}
+              <p className="text-xs text-emerald-200/90 max-w-xl mx-auto">
+                Transaction History Tool correctly invoked. 90-day spending average baseline successfully retrieved and evidence grounded in raw logs in {rerunInfo?.recoveryTimeMs || 180}ms.
               </p>
             </div>
-          </div>
-
-          <span className="px-3 py-1 rounded bg-purple-950 text-purple-300 border border-purple-800 text-xs font-mono font-bold">
-            RECOVERED IN 180ms
-          </span>
+          )}
         </div>
-
-        {/* Core Highlight Banner: TOOL SUCCESS ≠ TASK SUCCESS */}
-        <div className="p-5 rounded-xl bg-gradient-to-r from-red-950/80 via-[#190F2E] to-purple-950/60 border-2 border-red-500/60 text-center space-y-2">
-          <div className="text-xs font-mono tracking-widest text-red-400 uppercase font-extrabold flex items-center justify-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
-            CRITICAL DETECTION PARADIGM
-          </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">
-            TOOL SUCCESS ≠ TASK SUCCESS
-          </h2>
-          <p className="text-xs text-slate-300 max-w-xl mx-auto">
-            The external API tool returned an HTTP 200 success response, but the agent's overall investigation goal completely failed due to incomplete data payload.
-          </p>
-        </div>
-
-        {/* Side-by-Side Comparison: Expected vs Actual */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* EXPECTED TOOL */}
-          <div className="p-5 rounded-xl bg-[#070A12] border border-emerald-500/40 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-emerald-400 font-bold uppercase">EXPECTED TOOL</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="font-mono text-sm font-bold text-white bg-[#0A0F1D] p-3 rounded border border-[#1E2945]">
-              {failureCase.expectedTool}
-            </div>
-            <div className="text-xs text-slate-400">
-              Required by planner to calculate 90-day spending average baseline for TXN10291.
-            </div>
-          </div>
-
-          {/* ACTUAL EXECUTED TOOL */}
-          <div className="p-5 rounded-xl bg-[#070A12] border border-red-500/40 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-red-400 font-bold uppercase">ACTUAL EXECUTED TOOL</span>
-              <AlertOctagon className="w-4 h-4 text-red-400" />
-            </div>
-            <div className="font-mono text-sm font-bold text-white bg-[#0A0F1D] p-3 rounded border border-[#1E2945]">
-              {failureCase.actualTool}
-            </div>
-            <div className="text-xs text-slate-400">
-              Agent incorrectly invoked simple balance endpoint which returned balance without history array.
-            </div>
-          </div>
-        </div>
-
-        {/* Status Comparison */}
-        <div className="p-4 rounded-xl bg-[#070A12] border border-[#1E2945] flex flex-col sm:flex-row items-center justify-around gap-4 font-mono text-xs text-center">
-          <div>
-            <span className="text-slate-400 block text-[10px]">TOOL HTTP STATUS</span>
-            <span className="text-emerald-400 font-extrabold text-sm">{failureCase.toolStatus}</span>
-          </div>
-          <div className="h-8 w-px bg-[#1E2945] hidden sm:block"></div>
-          <div>
-            <span className="text-slate-400 block text-[10px]">INVESTIGATION GOAL</span>
-            <span className="text-red-400 font-extrabold text-sm">{failureCase.goalStatus}</span>
-          </div>
-        </div>
-
-        {/* Resolution Workflow Stepper */}
-        <div>
-          <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400 mb-3">
-            PRISM Self-Correction Remediation Flow
-          </h4>
-
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-            <div className="p-3 rounded-xl bg-[#070A12] border border-purple-500/30 text-center">
-              <div className="text-[10px] font-mono text-purple-400 font-bold">STEP 1</div>
-              <div className="font-bold text-xs text-white">PRISM DETECTED</div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#070A12] border border-purple-500/30 text-center">
-              <div className="text-[10px] font-mono text-purple-400 font-bold">STEP 2</div>
-              <div className="font-bold text-xs text-white">DIAGNOSED</div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#070A12] border border-purple-500/30 text-center">
-              <div className="text-[10px] font-mono text-purple-400 font-bold">STEP 3</div>
-              <div className="font-bold text-xs text-white">CORRECTED</div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#070A12] border border-purple-500/30 text-center">
-              <div className="text-[10px] font-mono text-purple-400 font-bold">STEP 4</div>
-              <div className="font-bold text-xs text-white">RE-RUN</div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-center">
-              <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 5</div>
-              <div className="font-bold text-xs text-emerald-300">{failureCase.reRunStatus}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
