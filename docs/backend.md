@@ -3,7 +3,7 @@
 Welcome to the FinGuard Backend Foundation documentation.
 
 ## Architecture
-The backend is built with Python, FastAPI, SQLAlchemy, and SQLite.
+The backend is built with Python, FastAPI, SQLAlchemy 2.0, PostgreSQL (with SQLite fallback for zero-config local testing), and Pydantic V2.
 
 ```
 backend/
@@ -31,15 +31,26 @@ backend/
    pip install -r requirements.txt
    ```
 
-2. **Run FastAPI Development Server**
+2. **Configure Database Connection (`.env` or environment variables)**
+   - **PostgreSQL**:
+     ```bash
+     DATABASE_URL=postgresql://postgres:postgres@localhost:5432/finguard
+     ```
+   - **SQLite (Default fallback)**:
+     ```bash
+     DATABASE_URL=sqlite:///./finguard.db
+     ```
+
+3. **Run FastAPI Development Server**
    ```bash
    uvicorn backend.app.api.main:app --reload --port 8000
    ```
 
-3. **Database Initialization**
-   The SQLite database (`finguard.db`) is automatically initialized and seeded with synthetic data upon server startup.
+4. **Database Initialization & Seeding**
+   The database tables and demo synthetic financial dataset (`CUST458`, `TXN10291`, etc.) are automatically initialized and seeded on FastAPI application startup.
 
-4. **Running Unit Tests**
+5. **Running Unit Tests**
    ```bash
    pytest
    ```
+

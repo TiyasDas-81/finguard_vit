@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend.app.database.database import SessionLocal, Base, engine
 from backend.app.models.models import Customer, Merchant, Transaction, RiskEvent
 
@@ -46,8 +46,8 @@ def seed_data():
         db.add_all([xyz_merchant, grocery_merchant, cafe_merchant])
         db.commit()
 
-        # Target datetime for suspicious event: 02:17 AM today
-        now = datetime.now().replace(hour=2, minute=17, second=0, microsecond=0)
+        # Target datetime for suspicious event: 02:17 AM today (UTC)
+        now = datetime.now(timezone.utc).replace(hour=2, minute=17, second=0, microsecond=0)
 
         # 3. Main Suspicious Transaction TXN10291
         suspicious_txn = Transaction(

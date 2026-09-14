@@ -1,5 +1,6 @@
 import sys
 import os
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
@@ -17,66 +18,173 @@ def init_db(db: Session):
     if existing_cust:
         return
 
-    # 1. Customers
+    # 1. Main Demo Customer CUST458
     cust458 = Customer(
         customer_id="CUST458",
-        name="Aarav Sharma",
-        email="aarav.sharma@example.com",
-        risk_rating="HIGH",
-        historical_avg_monthly_spend=4300.0,
-        spending_profile={
-            "avg_transaction": 4300.0,
-            "monthly_baseline": 35000.0,
-            "usual_categories": ["GROCERY", "UTILITIES", "DINING"]
-        }
+        name="Rahul Sharma",
+        email="rahul.sharma@example.com",
+        avg_txn_amount=4300.0,
+        normal_start_time="08:00",
+        normal_end_time="23:00",
+        account_status="ACTIVE"
     )
     db.add(cust458)
 
     # 2. Merchants
-    m1 = Merchant(merchant_id="MCH_XYZ", name="XYZ Electronics", category="ELECTRONICS", risk_tier="HIGH")
-    m2 = Merchant(merchant_id="MCH_SUP", name="City Supermarket", category="GROCERY", risk_tier="LOW")
-    db.add_all([m1, m2])
+    m1 = Merchant(
+        merchant_id="MERCH_XYZ",
+        name="XYZ Electronics",
+        category="Electronics & Gadgets",
+        risk_level="HIGH"
+    )
+    m2 = Merchant(
+        merchant_id="MERCH_GROCERY",
+        name="Daily Fresh Supermarket",
+        category="Groceries",
+        risk_level="LOW"
+    )
+    m3 = Merchant(
+        merchant_id="MERCH_CAFE",
+        name="Urban Coffee Roasters",
+        category="Dining",
+        risk_level="LOW"
+    )
+    db.add_all([m1, m2, m3])
+    db.commit()
 
-    # 3. Historical Baseline Transactions for CUST458 (Average ~ ₹4,300)
-    hist_txns = [
-        Transaction(transaction_id="TXN10001", customer_id="CUST458", amount=3500.0, merchant="City Supermarket", timestamp="10:30 AM", status="COMPLETED", type="PURCHASE"),
-        Transaction(transaction_id="TXN10002", customer_id="CUST458", amount=4200.0, merchant="Power Utility Corp", timestamp="02:15 PM", status="COMPLETED", type="PURCHASE"),
-        Transaction(transaction_id="TXN10003", customer_id="CUST458", amount=4800.0, merchant="Metro Fuel Station", timestamp="06:45 PM", status="COMPLETED", type="PURCHASE"),
-        Transaction(transaction_id="TXN10004", customer_id="CUST458", amount=4700.0, merchant="Fresh Foods Mart", timestamp="08:20 PM", status="COMPLETED", type="PURCHASE"),
-    ]
-    db.add_all(hist_txns)
+    # Target datetime: fixed reference time today at 02:17 AM
+    now = datetime.now(timezone.utc).replace(hour=2, minute=17, second=0, microsecond=0)
 
-    # 4. Rapid Related Transfers (3 transfers in ~7 mins, total ₹1,95,000)
-    rapid_txns = [
-        Transaction(transaction_id="TXN10288", customer_id="CUST458", amount=65000.0, merchant="Internal Transfer", timestamp="02:10 AM", status="FLAGGED", type="TRANSFER", recipient="Account-901"),
-        Transaction(transaction_id="TXN10289", customer_id="CUST458", amount=65000.0, merchant="Internal Transfer", timestamp="02:13 AM", status="FLAGGED", type="TRANSFER", recipient="Account-902"),
-        Transaction(transaction_id="TXN10290", customer_id="CUST458", amount=65000.0, merchant="Internal Transfer", timestamp="02:15 AM", status="FLAGGED", type="TRANSFER", recipient="Account-903"),
-    ]
-    db.add_all(rapid_txns)
-
-    # 5. Primary Suspicious Transaction TXN10291 (₹78,000 at XYZ Electronics, 02:17 AM)
+    # 3. Main Suspicious Transaction TXN10291 (₹78,000 at XYZ Electronics, 02:17 AM)
     suspicious_txn = Transaction(
         transaction_id="TXN10291",
         customer_id="CUST458",
+        merchant_id="MERCH_XYZ",
         amount=78000.0,
-        merchant="XYZ Electronics",
-        timestamp="02:17 AM",
         status="SUSPICIOUS",
-        type="PURCHASE"
+        risk_score=87.0,
+        timestamp=now,
+        location="Mumbai, IN",
+        channel="ONLINE",
+        recipient_account="ACC_UNKNOWN_99"
     )
     db.add(suspicious_txn)
 
-    # 6. Risk Event Record for TXN10291
-    risk_event = RiskEvent(
-        event_id="RE_10291",
-        transaction_id="TXN10291",
-        customer_id="CUST458",
-        risk_score=87,
-        risk_level="HIGH",
-        status="SUSPICIOUS",
-        flags=["amount_anomaly_18x", "new_merchant", "off_hours_2am", "rapid_transfers_cluster"]
-    )
-    db.add(risk_event)
+    # 4. Rapid Related Transfers (3 transfers in ~7 mins, total ₹1,95,000)
+    rapid_txns = [
+        Transaction(
+            transaction_id="TXN10288",
+            customer_id="CUST458",
+            merchant_id=None,
+            amount=65000.0,
+            status="COMPLETED",
+            risk_score=72.0,
+            timestamp=now - timedelta(minutes=7),
+            location="Mumbai, IN",
+            channel="ONLINE",
+            recipient_account="ACC_REL_01"
+        ),
+        Transaction(
+            transaction_id="TXN10289",
+            customer_id="CUST458",
+            merchant_id=None,
+            amount=65000.0,
+            status="COMPLETED",
+            risk_score=75.0,
+            timestamp=now - timedelta(minutes=4),
+            location="Mumbai, IN",
+            channel="ONLINE",
+            recipient_account="ACC_REL_02"
+        ),
+        Transaction(
+            transaction_id="TXN10290",
+            customer_id="CUST458",
+            merchant_id=None,
+            amount=65000.0,
+            status="COMPLETED",
+            risk_score=78.0,
+            timestamp=now - timedelta(minutes=2),
+            location="Mumbai, IN",
+            channel="ONLINE",
+            recipient_account="ACC_REL_03"
+        ),
+    ]
+    db.add_all(rapid_txns)
+
+    # 5. Historical Normal Baseline Transactions for CUST458 (~₹4,300 average)
+    hist_txns = [
+        Transaction(
+            transaction_id="TXN00101",
+            customer_id="CUST458",
+            merchant_id="MERCH_GROCERY",
+            amount=4100.0,
+            status="COMPLETED",
+            risk_score=2.0,
+            timestamp=now - timedelta(days=1, hours=-8),
+            location="Mumbai, IN",
+            channel="POS"
+        ),
+        Transaction(
+            transaction_id="TXN00102",
+            customer_id="CUST458",
+            merchant_id="MERCH_CAFE",
+            amount=4500.0,
+            status="COMPLETED",
+            risk_score=1.0,
+            timestamp=now - timedelta(days=2, hours=-12),
+            location="Mumbai, IN",
+            channel="POS"
+        ),
+        Transaction(
+            transaction_id="TXN00103",
+            customer_id="CUST458",
+            merchant_id="MERCH_GROCERY",
+            amount=4300.0,
+            status="COMPLETED",
+            risk_score=3.0,
+            timestamp=now - timedelta(days=3, hours=-10),
+            location="Mumbai, IN",
+            channel="POS"
+        ),
+    ]
+    db.add_all(hist_txns)
+
+    # 6. Risk Events for TXN10291
+    risk_events = [
+        RiskEvent(
+            event_id="RE_101",
+            transaction_id="TXN10291",
+            customer_id="CUST458",
+            event_type="HIGH_AMOUNT",
+            severity="CRITICAL",
+            description="Transaction amount ₹78,000 is ~18x customer's historical average of ₹4,300."
+        ),
+        RiskEvent(
+            event_id="RE_102",
+            transaction_id="TXN10291",
+            customer_id="CUST458",
+            event_type="UNUSUAL_TIME",
+            severity="HIGH",
+            description="Transaction occurred at 02:17 AM, outside normal window (08:00 AM - 11:00 PM)."
+        ),
+        RiskEvent(
+            event_id="RE_103",
+            transaction_id="TXN10291",
+            customer_id="CUST458",
+            event_type="UNSEEN_MERCHANT",
+            severity="MEDIUM",
+            description="Merchant XYZ Electronics has never been used by CUST458 previously."
+        ),
+        RiskEvent(
+            event_id="RE_104",
+            transaction_id="TXN10291",
+            customer_id="CUST458",
+            event_type="RAPID_TRANSFERS",
+            severity="CRITICAL",
+            description="Part of 3 rapid related transfers totaling ₹1,95,000 within 7 minutes."
+        ),
+    ]
+    db.add_all(risk_events)
 
     db.commit()
 
