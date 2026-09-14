@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { Shield, Bell, Search, Activity, FileText, History, Cpu, ChevronRight, Database } from 'lucide-react';
@@ -6,6 +6,18 @@ import { Shield, Bell, Search, Activity, FileText, History, Cpu, ChevronRight, D
 export const Layout: React.FC = () => {
   const location = useLocation();
   const apiMode = apiService.getApiMode();
+  const [backendHealth, setBackendHealth] = useState<{ status: string; service: string }>({
+    status: 'CHECKING',
+    service: 'Initializing',
+  });
+
+  useEffect(() => {
+    async function checkHealth() {
+      const res = await apiService.checkHealth();
+      setBackendHealth(res);
+    }
+    checkHealth();
+  }, []);
 
   const getPageTitle = () => {
     if (location.pathname.startsWith('/alerts')) return 'Security Alerts';

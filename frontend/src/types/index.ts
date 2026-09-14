@@ -1,6 +1,16 @@
 export type RiskLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 export type AlertStatus = 'SUSPICIOUS' | 'UNDER_REVIEW' | 'AUTO_CLEARED' | 'HIGH';
 
+export interface Customer {
+  id: string;
+  name: string;
+  accountAge: string;
+  avgTxnAmount: string;
+  location: string;
+  email?: string;
+  riskCategory?: string;
+}
+
 export interface Transaction {
   id: string;
   transactionId: string;
@@ -42,13 +52,20 @@ export interface WorkflowStep {
 }
 
 export interface ToolCall {
-  id: string;
+  id?: string;
   name: string;
+  tool?: string;
   status: 'SUCCESS' | 'FAILED' | 'HTTP_200_GOAL_FAILED';
+  success?: boolean;
   statusCode: number;
+  status_code?: number;
   executionTimeMs: number;
+  execution_time?: number;
   input: Record<string, any>;
   outputSummary: Record<string, any>;
+  output?: Record<string, any>;
+  data?: Record<string, any>;
+  error?: string;
 }
 
 export interface Evidence {
@@ -78,16 +95,24 @@ export interface InvestigationReport {
   generatedAt: string;
 }
 
+export interface AgentTrace {
+  id: string;
+  stepNumber: number;
+  event: string;
+  service: string;
+  timestamp: string;
+  durationMs: number;
+  status: 'SUCCESS' | 'WARNING' | 'FAILED' | 'PRISM_CORRECTED';
+  details: string;
+  toolCall?: ToolCall;
+  run_id?: string;
+  transaction_id?: string;
+}
+
 export interface Investigation {
   id: string;
   transactionId: string;
-  customer: {
-    id: string;
-    name: string;
-    accountAge: string;
-    avgTxnAmount: string;
-    location: string;
-  };
+  customer: Customer;
   transaction: Transaction;
   riskScore: number;
   riskLevel: RiskLevel;
@@ -101,18 +126,6 @@ export interface Investigation {
   humanReviewRequired: boolean;
   dossierStatus: string;
   report: InvestigationReport;
-}
-
-export interface AgentTrace {
-  id: string;
-  stepNumber: number;
-  event: string;
-  service: string;
-  timestamp: string;
-  durationMs: number;
-  status: 'SUCCESS' | 'WARNING' | 'FAILED' | 'PRISM_CORRECTED';
-  details: string;
-  toolCall?: ToolCall;
 }
 
 export interface PrismFailureState {
