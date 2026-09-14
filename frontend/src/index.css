@@ -5,17 +5,8 @@
   --bg-dark: #070A12;
   --bg-card: #0F1629;
   --bg-card-hover: #151F38;
-  --bg-input: #121A2F;
   --border-color: #1E2945;
   --border-glow: #2A3B66;
-  
-  --cyan-accent: #00F2FE;
-  --cyan-glow: rgba(0, 242, 254, 0.15);
-  --blue-accent: #4FACFE;
-  --red-alert: #FF3B30;
-  --amber-alert: #FF9500;
-  --green-success: #34C759;
-  --purple-prism: #A855F7;
 }
 
 * {
@@ -48,57 +39,52 @@ body {
   background: #2A3B66;
 }
 
-/* Typography & Mono */
-.font-mono {
-  font-family: var(--font-mono);
-}
-
 /* Glassmorphism & Card Styles */
 .fg-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: #0F1629;
+  border: 1px solid #1E2945;
   border-radius: 12px;
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease-in-out;
 }
 
 .fg-card:hover {
-  border-color: var(--border-glow);
+  border-color: #2A3B66;
 }
 
 .fg-card-glow {
   position: relative;
   background: linear-gradient(135deg, rgba(15, 22, 41, 0.95), rgba(21, 31, 56, 0.8));
-  border: 1px solid rgba(0, 242, 254, 0.2);
+  border: 1px solid rgba(0, 242, 254, 0.25);
   box-shadow: 0 0 25px rgba(0, 242, 254, 0.08);
 }
 
 /* Badges */
 .badge-high {
-  background: rgba(255, 59, 48, 0.15);
+  background-color: rgba(255, 59, 48, 0.15);
   color: #FF6B6B;
-  border: 1px solid rgba(255, 59, 48, 0.3);
+  border: 1px solid rgba(255, 59, 48, 0.35);
 }
 
 .badge-medium {
-  background: rgba(255, 149, 0, 0.15);
+  background-color: rgba(255, 149, 0, 0.15);
   color: #FFC048;
-  border: 1px solid rgba(255, 149, 0, 0.3);
+  border: 1px solid rgba(255, 149, 0, 0.35);
 }
 
 .badge-low {
-  background: rgba(52, 199, 89, 0.15);
+  background-color: rgba(52, 199, 89, 0.15);
   color: #51D87E;
-  border: 1px solid rgba(52, 199, 89, 0.3);
+  border: 1px solid rgba(52, 199, 89, 0.35);
 }
 
 .badge-prism {
-  background: rgba(168, 85, 247, 0.15);
+  background-color: rgba(168, 85, 247, 0.15);
   color: #C084FC;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.35);
 }
 
-/* Pulsing Dots */
+/* Pulsing Dot */
 .pulse-dot {
   width: 8px;
   height: 8px;
