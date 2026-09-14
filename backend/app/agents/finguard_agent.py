@@ -14,6 +14,7 @@ from .tool_selector import ToolSelector
 from .investigator import Investigator
 from .report_generator import ReportGenerator
 from .tool_adapter import ToolAdapter
+from .prism_tracer import ExternalPrismTracer
 
 
 class FinGuardAgent:
@@ -29,6 +30,7 @@ class FinGuardAgent:
         self.tool_selector = ToolSelector()
         self.investigator = Investigator()
         self.report_generator = ReportGenerator()
+        self.external_tracer = ExternalPrismTracer()
 
     def run_investigation(
         self,
@@ -160,4 +162,11 @@ class FinGuardAgent:
             trace.outcome = "FAILED"
 
         trace.end_time = time.time()
+        
+        # Dispatch live telemetry trace to external BlockConvey PRISM platform if configured
+        try:
+            self.external_tracer.send_trace(trace)
+        except Exception:
+            pass
+
         return trace
