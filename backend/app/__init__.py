@@ -1,1 +1,1 @@
-# Package marker
+# Init file for app package
