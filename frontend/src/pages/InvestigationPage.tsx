@@ -24,48 +24,48 @@ export const InvestigationPage: React.FC = () => {
 
   if (loading || !investigation) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400 font-mono text-sm">
-        <Clock className="w-5 h-5 animate-spin text-cyan-400 mr-2" /> Generating AI Investigation Dossier...
+      <div className="flex items-center justify-center h-64 text-slate-500 font-mono text-sm">
+        <Clock className="w-5 h-5 animate-spin text-[#E55B13] mr-2" /> Generating AI Investigation Dossier...
       </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Top Banner & Transaction Summary */}
-      <div className="fg-card p-6 border-l-4 border-l-red-500 bg-gradient-to-r from-[#0F1629] via-[#121B33] to-[#0A0F1D]">
+      {/* Top Banner & Transaction Summary - High Contrast Presentation Slide Theme */}
+      <div className="fg-card p-6 border-l-4 border-l-[#DC2626] bg-gradient-to-r from-white via-[#FFFBF7] to-[#FFF4EC] border border-[#FCD5C1] shadow-md">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <RiskBadge risk={investigation.riskLevel} score={investigation.riskScore} />
-              <span className="text-xs font-mono text-slate-400">
-                Case Ref: <strong>{investigation.id}</strong>
+              <span className="text-xs font-mono text-slate-600 font-semibold">
+                Case Ref: <strong className="text-slate-900">{investigation.id}</strong>
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">
-              Transaction Investigation: <span className="text-cyan-400 font-mono">{investigation.transactionId}</span>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              Transaction Investigation: <span className="text-[#E55B13] font-mono">{investigation.transactionId}</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Customer: <strong className="text-slate-200">{investigation.customer.name} ({investigation.customer.id})</strong> &bull; Location: {investigation.customer.location}
+            <p className="text-xs text-slate-600 mt-1 font-medium">
+              Customer: <strong className="text-slate-900 font-bold">{investigation.customer.name} ({investigation.customer.id})</strong> &bull; Location: {investigation.customer.location}
             </p>
           </div>
 
-          <div className="flex items-center gap-6 p-4 rounded-xl bg-[#070A12] border border-[#1E2945]">
+          <div className="flex items-center gap-6 p-4 rounded-2xl bg-white border border-[#E6D9C5] shadow-xs">
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-mono">Amount Flagged</div>
-              <div className="text-2xl font-extrabold text-cyan-300 font-mono">{investigation.transaction.amount}</div>
+              <div className="text-[11px] text-slate-500 uppercase font-mono font-bold">Amount Flagged</div>
+              <div className="text-2xl font-black text-slate-900 font-mono">{investigation.transaction.amount}</div>
             </div>
-            <div className="h-8 w-px bg-[#1E2945]"></div>
+            <div className="h-8 w-px bg-[#E6D9C5]"></div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-mono">AI Risk Rating</div>
-              <div className="text-2xl font-extrabold text-red-400 font-mono flex items-center gap-1">
-                {investigation.riskScore}% <AlertTriangle className="w-4 h-4 text-red-400" />
+              <div className="text-[11px] text-slate-500 uppercase font-mono font-bold">AI Risk Rating</div>
+              <div className="text-2xl font-black text-[#DC2626] font-mono flex items-center gap-1">
+                {investigation.riskScore}% <AlertTriangle className="w-4 h-4 text-[#DC2626]" />
               </div>
             </div>
-            <div className="h-8 w-px bg-[#1E2945]"></div>
+            <div className="h-8 w-px bg-[#E6D9C5]"></div>
             <NavLink
               to={`/evidence/${investigation.id}`}
-              className="px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-[#FFF2EB] hover:bg-[#FFE6D9] text-[#E55B13] border border-[#FCD5C1] text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-xs"
             >
               Visual Evidence Chain <ExternalLink className="w-3.5 h-3.5" />
             </NavLink>
@@ -73,30 +73,30 @@ export const InvestigationPage: React.FC = () => {
         </div>
 
         {/* Transaction Metadata Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-4 border-t border-[#1E2945]/70 text-xs font-mono">
-          <div>
-            <span className="text-slate-500 block text-[10px]">MERCHANT</span>
-            <span className="text-white font-semibold">{investigation.transaction.merchant}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-4 border-t border-[#E6D9C5] text-xs font-mono">
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">MERCHANT</span>
+            <span className="text-slate-900 font-extrabold">{investigation.transaction.merchant}</span>
           </div>
-          <div>
-            <span className="text-slate-500 block text-[10px]">TIME</span>
-            <span className="text-amber-400 font-semibold">{investigation.transaction.time}</span>
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">TIME</span>
+            <span className="text-[#D97706] font-extrabold">{investigation.transaction.time}</span>
           </div>
-          <div>
-            <span className="text-slate-500 block text-[10px]">NORMAL WINDOW</span>
-            <span className="text-slate-300">{investigation.transaction.normalWindow}</span>
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">NORMAL WINDOW</span>
+            <span className="text-slate-800 font-semibold">{investigation.transaction.normalWindow}</span>
           </div>
-          <div>
-            <span className="text-slate-500 block text-[10px]">HISTORICAL AVG</span>
-            <span className="text-slate-300">{investigation.transaction.historicalAvg}</span>
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">HISTORICAL AVG</span>
+            <span className="text-slate-800 font-semibold">{investigation.transaction.historicalAvg}</span>
           </div>
-          <div>
-            <span className="text-slate-500 block text-[10px]">IP ADDRESS</span>
-            <span className="text-red-400">{investigation.transaction.ipAddress}</span>
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">IP ADDRESS</span>
+            <span className="text-[#DC2626] font-extrabold">{investigation.transaction.ipAddress}</span>
           </div>
-          <div>
-            <span className="text-slate-500 block text-[10px]">DEVICE FINGERPRINT</span>
-            <span className="text-slate-300">{investigation.transaction.device}</span>
+          <div className="p-2.5 rounded-xl bg-white border border-[#E6D9C5]">
+            <span className="text-slate-500 block text-[10px] font-bold">DEVICE FINGERPRINT</span>
+            <span className="text-slate-800 font-semibold">{investigation.transaction.device}</span>
           </div>
         </div>
       </div>
@@ -114,17 +114,17 @@ export const InvestigationPage: React.FC = () => {
         {/* Right Column: AI Reasoning & Human Governance */}
         <div className="lg:col-span-5 space-y-6">
           {/* AI Reasoning Card */}
-          <div className="fg-card p-6 space-y-4">
-            <h3 className="font-bold text-lg text-white flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-purple-400" />
+          <div className="fg-card p-6 space-y-4 bg-white border border-[#E6D9C5] shadow-sm">
+            <h3 className="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-[#E55B13]" />
               AI Multi-Vector Synthesis & Reasoning
             </h3>
 
-            <ul className="space-y-2.5 text-xs text-slate-300">
+            <ul className="space-y-2.5 text-xs text-slate-700">
               {investigation.aiReasoning.map((line, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-[#0A0F1D] border border-[#1E2945]">
-                  <span className="text-cyan-400 font-mono font-bold">&bull;</span>
-                  <span>{line}</span>
+                <li key={idx} className="flex items-start gap-2.5 p-3 rounded-xl bg-[#FAF5ED] border border-[#E6D9C5] font-medium leading-relaxed">
+                  <span className="text-[#E55B13] font-mono font-black text-sm">&bull;</span>
+                  <span className="text-slate-800">{line}</span>
                 </li>
               ))}
             </ul>

@@ -2,82 +2,82 @@ import React from 'react';
 import { Investigation } from '../../types';
 import { FileText, ShieldAlert } from 'lucide-react';
 
-interface InvestigationReportProps {
-  investigation: Investigation;
-}
-
 export const InvestigationReport: React.FC<InvestigationReportProps> = ({ investigation }) => {
   return (
-    <div className="max-w-4xl mx-auto fg-card-glow p-8 rounded-2xl border-cyan-500/40 shadow-2xl space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b border-[#1E2945]">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-cyan-400" />
+    <div className="max-w-4xl mx-auto fg-card-glow p-8 rounded-3xl border border-[#FCD5C1] bg-white shadow-xl space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-[#E6D9C5]">
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 rounded-2xl bg-[#FFF2EB] border border-[#FCD5C1] flex items-center justify-center">
+            <FileText className="w-6 h-6 text-[#E55B13]" />
           </div>
           <div>
-            <h3 className="font-extrabold text-xl text-white tracking-wide">
+            <h3 className="font-black text-xl text-slate-900 tracking-tight">
               FIN GUARD INVESTIGATION DOSSIER
             </h3>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-slate-500 font-mono font-semibold">
               Official AI Security Artifact &bull; Ref: {investigation.id}
             </p>
           </div>
         </div>
 
-        <div className="px-4 py-2 rounded-xl bg-red-950 text-red-400 border border-red-800 text-xs font-mono font-extrabold tracking-wider">
+        <div className="px-4 py-2 rounded-xl bg-[#FFEBEB] text-[#DC2626] border border-[#FCA5A5] text-xs font-mono font-black tracking-wider">
           {investigation.dossierStatus}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
         {/* Section 1: Transaction Details */}
-        <div className="p-4 rounded-xl bg-[#070A12] border border-[#1E2945] space-y-2">
-          <span className="text-cyan-400 font-mono font-bold uppercase text-[11px] block">1. TRANSACTION DETAILS</span>
-          <div className="space-y-1 font-mono text-slate-300">
-            <div>Txn ID: <strong className="text-white">{investigation.transactionId}</strong></div>
-            <div>Customer: <strong className="text-white">{investigation.customer.name} ({investigation.customer.id})</strong></div>
-            <div>Amount: <strong className="text-cyan-300 font-bold">{investigation.transaction.amount}</strong></div>
-            <div>Merchant: {investigation.transaction.merchant}</div>
-            <div>Time: {investigation.transaction.time}</div>
+        <div className="p-4 rounded-2xl bg-[#FAF5ED] border border-[#E6D9C5] space-y-2">
+          <span className="text-[#E55B13] font-mono font-extrabold uppercase text-[11px] block">1. TRANSACTION DETAILS</span>
+          <div className="space-y-1.5 font-mono text-slate-700">
+            <div>Txn ID: <strong className="text-slate-900 font-bold">{investigation.transactionId}</strong></div>
+            <div>Customer: <strong className="text-slate-900 font-bold">{investigation.customer.name} ({investigation.customer.id})</strong></div>
+            <div>Amount: <strong className="text-slate-900 font-black">{investigation.transaction.amount}</strong></div>
+            <div>Merchant: <span className="font-bold text-slate-800">{investigation.transaction.merchant}</span></div>
+            <div>Time: <span className="text-[#D97706] font-bold">{investigation.transaction.time}</span></div>
           </div>
         </div>
 
         {/* Section 2: Risk Level */}
-        <div className="p-4 rounded-xl bg-[#070A12] border border-[#1E2945] space-y-2">
-          <span className="text-cyan-400 font-mono font-bold uppercase text-[11px] block">2. RISK EVALUATION</span>
-          <div className="space-y-1 font-mono">
-            <div className="text-2xl font-extrabold text-red-400">{investigation.riskScore}% RISK RATING</div>
-            <div className="text-slate-300">Classification: <strong className="text-red-400">{investigation.riskLevel} ANOMALY</strong></div>
-            <div className="text-slate-400 text-[11px]">Neural Engine Confidence: 99.4%</div>
+        <div className="p-4 rounded-2xl bg-[#FAF5ED] border border-[#E6D9C5] space-y-2">
+          <span className="text-[#E55B13] font-mono font-extrabold uppercase text-[11px] block">2. RISK EVALUATION</span>
+          <div className="space-y-1.5 font-mono">
+            <div className="text-2xl font-black text-[#DC2626]">{investigation.riskScore}% RISK RATING</div>
+            <div className="text-slate-700">Classification: <strong className="text-[#DC2626] font-extrabold">{investigation.riskLevel} ANOMALY</strong></div>
+            <div className="text-slate-500 text-[11px] font-semibold">Neural Engine Confidence: 99.4%</div>
           </div>
         </div>
 
         {/* Section 3: Key Evidence */}
-        <div className="p-4 rounded-xl bg-[#070A12] border border-[#1E2945] space-y-2">
-          <span className="text-cyan-400 font-mono font-bold uppercase text-[11px] block">3. KEY EVIDENCE VECTORS</span>
-          <ul className="space-y-1 text-slate-300 list-disc list-inside">
+        <div className="p-4 rounded-2xl bg-[#FAF5ED] border border-[#E6D9C5] space-y-2">
+          <span className="text-[#E55B13] font-mono font-extrabold uppercase text-[11px] block">3. KEY EVIDENCE VECTORS</span>
+          <ul className="space-y-1.5 text-slate-700 list-disc list-inside font-medium leading-relaxed">
             {investigation.report.evidenceSummary.map((item, idx) => (
-              <li key={idx}>{item}</li>
+              <li key={idx}><strong className="text-slate-900">{item}</strong></li>
             ))}
           </ul>
         </div>
 
         {/* Section 4: AI Recommendation */}
-        <div className="p-4 rounded-xl bg-[#070A12] border border-[#1E2945] space-y-2">
-          <span className="text-cyan-400 font-mono font-bold uppercase text-[11px] block">4. AI RECOMMENDATION</span>
-          <div className="p-2.5 rounded bg-red-950/40 border border-red-500/30 font-mono text-red-300 font-bold">
+        <div className="p-4 rounded-2xl bg-[#FAF5ED] border border-[#E6D9C5] space-y-2">
+          <span className="text-[#E55B13] font-mono font-extrabold uppercase text-[11px] block">4. AI RECOMMENDATION</span>
+          <div className="p-3 rounded-xl bg-[#FFEBEB] border border-[#FCA5A5] font-mono text-[#DC2626] font-extrabold text-xs">
             {investigation.recommendation}
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-600 font-medium">
             PRISM reliability check passed. Evidence fully grounded in raw logs.
           </p>
         </div>
       </div>
 
-      <div className="pt-4 border-t border-[#1E2945] flex items-center justify-between text-[11px] text-slate-500 font-mono">
+      <div className="pt-4 border-t border-[#E6D9C5] flex items-center justify-between text-[11px] text-slate-500 font-mono">
         <span>Generated by FinGuard Core LLM &bull; Branch: soumen</span>
         <span>Cryptographic Hash: 0x9f8b...41e2</span>
       </div>
     </div>
   );
 };
+
+interface InvestigationReportProps {
+  investigation: Investigation;
+}
