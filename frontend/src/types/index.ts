@@ -42,6 +42,8 @@ export interface Alert {
   actionRequired: string;
 }
 
+export type AlertItem = Alert;
+
 export interface WorkflowStep {
   id: 'UNDERSTAND' | 'PLAN' | 'INVESTIGATE' | 'EXPLAIN' | 'REPORT';
   label: string;
@@ -128,6 +130,8 @@ export interface Investigation {
   report: InvestigationReport;
 }
 
+export type InvestigationData = Investigation;
+
 export interface PrismFailureState {
   id: string;
   timestamp: string;
@@ -157,6 +161,8 @@ export interface PrismEvaluation {
   recentFailures: PrismFailureState[];
 }
 
+export type PrismMetrics = PrismEvaluation;
+
 export interface HumanReview {
   investigationId: string;
   decision: 'ESCALATE' | 'MARK_SUSPICIOUS' | 'DISMISS';
@@ -176,3 +182,5 @@ export interface HistoryRun {
   status: 'COMPLETED' | 'IN_PROGRESS' | 'CANCELLED';
   trace: AgentTrace[];
 }
+
+export type TraceStep = AgentTrace;

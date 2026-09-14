@@ -1,8 +1,9 @@
+/// <reference types="vite/client" />
 import { Alert, Customer, Transaction, Investigation, PrismEvaluation, AgentTrace, HistoryRun, PrismFailureState, Evidence } from '../types';
 import { mockAlerts, mockInvestigationTXN10291, mockPrismEvaluations, mockHistoryRuns } from '../mock/mockData';
 
-const API_MODE = import.meta.env?.VITE_API_MODE || 'mock';
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_MODE = (import.meta as any).env?.VITE_API_MODE || 'mock';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 export const apiService = {
   getApiMode(): string {
@@ -210,7 +211,6 @@ export const apiService = {
     };
   },
 
-  // Interactive PRISM Simulation APIs
   async simulatePrismFailure(): Promise<PrismFailureState> {
     if (API_MODE === 'backend') {
       try {
