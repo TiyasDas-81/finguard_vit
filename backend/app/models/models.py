@@ -1,7 +1,10 @@
 from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.app.database.database import Base
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -13,7 +16,7 @@ class Customer(Base):
     normal_start_time = Column(String, default="08:00")
     normal_end_time = Column(String, default="23:00")
     account_status = Column(String, default="ACTIVE")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
 
     transactions = relationship("Transaction", back_populates="customer")
     risk_events = relationship("RiskEvent", back_populates="customer")
@@ -26,7 +29,7 @@ class Merchant(Base):
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)
     risk_level = Column(String, default="MEDIUM")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
 
     transactions = relationship("Transaction", back_populates="merchant")
 
@@ -40,7 +43,7 @@ class Transaction(Base):
     amount = Column(Float, nullable=False)
     status = Column(String, nullable=False, default="COMPLETED")  # e.g., SUSPICIOUS, COMPLETED, FLAGGED
     risk_score = Column(Float, default=0.0)  # e.g., 87.0
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=utc_now)
     location = Column(String, nullable=True)
     channel = Column(String, default="ONLINE")  # ONLINE, ATM, POS
     recipient_account = Column(String, nullable=True)
@@ -59,7 +62,8 @@ class RiskEvent(Base):
     event_type = Column(String, nullable=False)  # HIGH_AMOUNT, UNUSUAL_TIME, UNSEEN_MERCHANT, RAPID_TRANSFERS
     severity = Column(String, default="HIGH")  # LOW, MEDIUM, HIGH, CRITICAL
     description = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=utc_now)
 
     transaction = relationship("Transaction", back_populates="risk_events")
     customer = relationship("Customer", back_populates="risk_events")
+
