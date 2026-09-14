@@ -18,16 +18,27 @@
               mono: ['JetBrains Mono', 'monospace'],
             },
             colors: {
-              dark: '#070A12',
-              card: '#0F1629',
-              border: '#1E2945',
+              brand: {
+                DEFAULT: '#E55B13',
+                hover: '#D04E09',
+                light: '#FFF2EB',
+                border: '#FCD5C1',
+                dark: '#993500'
+              },
+              cream: {
+                bg: '#FAF5ED',
+                card: '#FFFFFF',
+                subtle: '#F4ECE0',
+                border: '#E6D9C5',
+                dark: '#D8C7AF'
+              }
             }
           }
         }
       }
     </script>
   </head>
-  <body class="bg-[#070A12] text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-white">
+  <body class="bg-[#FAF5ED] text-slate-900 font-sans antialiased selection:bg-orange-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

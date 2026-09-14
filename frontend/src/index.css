@@ -2,11 +2,12 @@
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
-  --bg-dark: #070A12;
-  --bg-card: #0F1629;
-  --bg-card-hover: #151F38;
-  --border-color: #1E2945;
-  --border-glow: #2A3B66;
+  --bg-cream: #FAF5ED;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFF9F3;
+  --border-color: #E6D9C5;
+  --border-glow: #FCD5C1;
+  --brand-orange: #E55B13;
 }
 
 * {
@@ -17,8 +18,8 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-dark);
-  color: #E2E8F0;
+  background-color: var(--bg-cream);
+  color: #1E293B;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -29,59 +30,61 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: var(--bg-cream);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E2945;
+  background: #D8C7AF;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2A3B66;
+  background: #C4B298;
 }
 
 /* Glassmorphism & Card Styles */
 .fg-card {
-  background-color: #0F1629;
-  border: 1px solid #1E2945;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  background-color: #FFFFFF;
+  border: 1px solid #E6D9C5;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(229, 91, 19, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
   transition: all 0.2s ease-in-out;
 }
 
 .fg-card:hover {
-  border-color: #2A3B66;
+  border-color: #E55B13;
+  box-shadow: 0 8px 25px -4px rgba(229, 91, 19, 0.1);
 }
 
 .fg-card-glow {
   position: relative;
-  background: linear-gradient(135deg, rgba(15, 22, 41, 0.95), rgba(21, 31, 56, 0.8));
-  border: 1px solid rgba(0, 242, 254, 0.25);
-  box-shadow: 0 0 25px rgba(0, 242, 254, 0.08);
+  background: linear-gradient(135deg, #FFFFFF, #FFF8F2);
+  border: 1.5px solid #FCD5C1;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -5px rgba(229, 91, 19, 0.12);
 }
 
 /* Badges */
 .badge-high {
-  background-color: rgba(255, 59, 48, 0.15);
-  color: #FF6B6B;
-  border: 1px solid rgba(255, 59, 48, 0.35);
+  background-color: #FFEBEB;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
 }
 
 .badge-medium {
-  background-color: rgba(255, 149, 0, 0.15);
-  color: #FFC048;
-  border: 1px solid rgba(255, 149, 0, 0.35);
+  background-color: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FCD34D;
 }
 
 .badge-low {
-  background-color: rgba(52, 199, 89, 0.15);
-  color: #51D87E;
-  border: 1px solid rgba(52, 199, 89, 0.35);
+  background-color: #D1FAE5;
+  color: #059669;
+  border: 1px solid #6EE7B7;
 }
 
 .badge-prism {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #C084FC;
-  border: 1px solid rgba(168, 85, 247, 0.35);
+  background-color: #FFF2EB;
+  color: #E55B13;
+  border: 1px solid #FCD5C1;
 }
 
 /* Pulsing Dot */
