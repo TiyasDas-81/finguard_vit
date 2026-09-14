@@ -112,3 +112,83 @@ def test_tool_risk_context():
     assert data["customer_id"] == "CUST458"
     assert data["overall_risk_score"] == 87.0
     assert data["active_risk_events_count"] == 4
+
+# 3. Dynamic Data-Driven & Edge Cases Tests (proving no hardcoding)
+def test_dynamic_spending_analytics_mutation():
+    from backend.app.models.models import Transaction
+    db = SessionLocal()
+    try:
+        # Add a new high-value transaction
+        new_txn = Transaction(
+            transaction_id="TXN_TEST_DYNAMIC",
+            customer_id="CUST458",
+            merchant_id="MERCH_GROCERY",
+            amount=86000.0,
+            status="COMPLETED",
+            risk_score=10.0
+        )
+        db.add(new_txn)
+        db.commit()
+
+        # Spending analytics should now dynamically compute against the new amount
+        res = analyze_spending("CUST458", transaction_id="TXN_TEST_DYNAMIC", db=db)
+        assert res["success"] is True
+        assert res["data"]["target_transaction_amount"] == 86000.0
+        assert res["data"]["anomaly_multiplier"] == 20.0
+    finally:
+        # Cleanup
+        db.query(Transaction).filter(Transaction.transaction_id == "TXN_TEST_DYNAMIC").delete()
+        db.commit()
+        db.close()
+
+def test_dynamic_merchant_analysis_mutation():
+    from backend.app.models.models import Transaction
+    db = SessionLocal()
+    try:
+        # Add a prior transaction with XYZ Electronics
+        prior_txn = Transaction(
+            transaction_id="TXN_PRIOR_MERCH",
+            customer_id="CUST458",
+            merchant_id="MERCH_XYZ",
+            amount=5000.0,
+            status="COMPLETED",
+            risk_score=5.0
+        )
+        db.add(prior_txn)
+        db.commit()
+
+        # Merchant analysis should now reflect known merchant
+        res = analyze_merchant("CUST458", "MERCH_XYZ", db=db)
+        assert res["success"] is True
+        assert res["data"]["is_first_time_merchant"] is False
+        assert res["data"]["prior_transactions_count"] == 1
+        assert res["data"]["risk_flag"] == "KNOWN_MERCHANT"
+    finally:
+        db.query(Transaction).filter(Transaction.transaction_id == "TXN_PRIOR_MERCH").delete()
+        db.commit()
+        db.close()
+
+def test_tool_error_handling_non_existent():
+    # Customer not found
+    res1 = get_transaction_history("NON_EXISTENT_CUST")
+    assert res1["success"] is False
+    assert res1["data"] is None
+    assert "not found" in res1["error"]
+
+    # Transaction not found in related activity
+    res2 = find_related_activity("NON_EXISTENT_TXN")
+    assert res2["success"] is False
+    assert res2["data"] is None
+    assert "not found" in res2["error"]
+
+def test_api_404_error_handling(client):
+    res_alert = client.get("/api/alerts/NON_EXISTENT_ALERT")
+    assert res_alert.status_code == 404
+    assert "not found" in res_alert.json()["detail"]
+
+    res_cust = client.get("/api/customers/NON_EXISTENT_CUST")
+    assert res_cust.status_code == 404
+
+    res_txn = client.get("/api/transactions/NON_EXISTENT_TXN")
+    assert res_txn.status_code == 404
+

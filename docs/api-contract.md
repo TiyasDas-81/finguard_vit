@@ -66,7 +66,7 @@ Every financial tool in `backend/app/tools/` MUST return a dictionary adhering t
 ```
 
 ### 2.2 Spending Analytics (`spending_analytics.py`)
-- **Function**: `analyze_spending(customer_id: str)`
+- **Function**: `analyze_spending(customer_id: str, transaction_id: Optional[str] = None)`
 - **Tool Name**: `"spending_analytics"`
 - **Data Structure**:
 ```json
@@ -76,10 +76,12 @@ Every financial tool in `backend/app/tools/` MUST return a dictionary adhering t
     "data": {
         "customer_id": "CUST458",
         "historical_average": 4300.0,
+        "target_transaction_amount": 78000.0,
         "highest_transaction_amount": 78000.0,
         "anomaly_multiplier": 18.14,
         "multiplier_description": "18.14x normal historical average",
-        "normal_transaction_window": "08:00-23:00"
+        "normal_transaction_window": "08:00-23:00",
+        "total_transactions_analyzed": 7
     },
     "error": null
 }
